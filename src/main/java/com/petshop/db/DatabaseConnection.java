@@ -15,7 +15,7 @@ public class DatabaseConnection {
     // E 'static' para que pertençam à classe e não a um objeto específico.
     private static final String URL = "jdbc:postgresql://localhost:5432/postgres";
     private static final String USER = "postgres";
-    private static final String PASSWORD = "lucas"; // <-- COLOQUE SUA SENHA AQUI
+    private static final String PASSWORD = "udesc"; // <-- COLOQUE SUA SENHA AQUI
 
     /**
      * Método público e estático para obter uma conexão com o banco de dados.
