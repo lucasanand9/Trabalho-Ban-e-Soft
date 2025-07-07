@@ -1,0 +1,125 @@
+-- Remove tabelas existentes na ordem inversa de dependência para permitir a recriação limpa.
+DROP TABLE IF EXISTS Ocorrencia;
+DROP TABLE IF EXISTS Contrata;
+DROP TABLE IF EXISTS Atendimento;
+DROP TABLE IF EXISTS Compra;
+DROP TABLE IF EXISTS Fornecimento;
+DROP TABLE IF EXISTS Servico;
+DROP TABLE IF EXISTS Funcionario;
+DROP TABLE IF EXISTS Animal;
+DROP TABLE IF EXISTS Cliente;
+DROP TABLE IF EXISTS Produto;
+DROP TABLE IF EXISTS Fornecedor;
+
+-- 1. Tabelas de Entidades Principais (não dependem de outras)
+CREATE TABLE Fornecedor (
+    id_fornecedor SERIAL PRIMARY KEY,
+    cnpj VARCHAR(14) NOT NULL UNIQUE,
+    nome VARCHAR(100) NOT NULL,
+    cep VARCHAR(8),
+    numero VARCHAR(20),
+    complemento VARCHAR(100)
+);
+
+CREATE TABLE Produto (
+    id_produto SERIAL PRIMARY KEY,
+    nome VARCHAR(100) NOT NULL,
+    tipo VARCHAR(50),
+    valor_venda DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE Cliente (
+    id_cliente SERIAL PRIMARY KEY,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    nome VARCHAR(100) NOT NULL,
+    telefone VARCHAR(15)
+);
+
+CREATE TABLE Funcionario (
+    id_funcionario SERIAL PRIMARY KEY,
+    cpf VARCHAR(11) NOT NULL UNIQUE,
+    nome VARCHAR(100) NOT NULL,
+    data_nascimento DATE,
+    salario DECIMAL(10, 2) NOT NULL
+);
+
+CREATE TABLE Servico (
+    id_servico SERIAL PRIMARY KEY,
+    tipo VARCHAR(100) NOT NULL UNIQUE,
+    preco DECIMAL(10, 2) NOT NULL,
+    tempo_duracao_minutos INT
+);
+
+-- 2. Entidades que dependem das principais
+
+CREATE TABLE Animal (
+    id_animal SERIAL PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    nome VARCHAR(50) NOT NULL,
+    raca VARCHAR(50),
+    idade INT,
+    tamanho VARCHAR(20),
+    FOREIGN KEY (cliente_id) REFERENCES Cliente(id_cliente) ON DELETE CASCADE
+);
+
+-- 3. Tabelas de Ligação (baseadas nos losangos do diagrama)
+
+-- Tabela para o relacionamento "Fornecimento"
+CREATE TABLE Fornecimento (
+    id_fornecimento SERIAL PRIMARY KEY,
+    fornecedor_id INT NOT NULL,
+    produto_id INT NOT NULL,
+    data DATE NOT NULL,
+    quantidade INT NOT NULL,
+    valor_total DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (fornecedor_id) REFERENCES Fornecedor(id_fornecedor),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id_produto)
+);
+
+-- Tabela para o relacionamento "Compra"
+CREATE TABLE Compra (
+    id_compra SERIAL PRIMARY KEY,
+    cliente_id INT NOT NULL,
+    produto_id INT NOT NULL,
+    data DATE NOT NULL,
+    hora TIME NOT NULL,
+    quantidade INT NOT NULL,
+    valor_total DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (cliente_id) REFERENCES Cliente(id_cliente),
+    FOREIGN KEY (produto_id) REFERENCES Produto(id_produto)
+);
+
+-- Tabela para o relacionamento "Atendimento" (liga Funcionario e Servico)
+-- Mesmo sendo um losango no diagrama, como tem chave primária, vira uma tabela.
+CREATE TABLE Atendimento (
+    id_atendimento SERIAL PRIMARY KEY,
+    funcionario_id INT NOT NULL,
+    servico_id INT NOT NULL,
+    data DATE NOT NULL,
+    hora TIME NOT NULL,
+    valor_atendimento DECIMAL(10, 2) NOT NULL,
+    FOREIGN KEY (funcionario_id) REFERENCES Funcionario(id_funcionario),
+    FOREIGN KEY (servico_id) REFERENCES Servico(id_servico)
+);
+
+-- Tabela para o relacionamento "Contrata" (liga Atendimento e Animal)
+-- Conforme a anotação no seu diagrama, com chave primária composta.
+CREATE TABLE Contrata (
+    atendimento_id INT NOT NULL,
+    animal_id INT NOT NULL,
+    PRIMARY KEY (atendimento_id, animal_id),
+    FOREIGN KEY (atendimento_id) REFERENCES Atendimento(id_atendimento),
+    FOREIGN KEY (animal_id) REFERENCES Animal(id_animal)
+);
+
+-- Tabela para a entidade "Ocorrencia" (liga-se a Atendimento)
+CREATE TABLE Ocorrencia (
+    id_ocorrencia SERIAL PRIMARY KEY,
+    atendimento_id INT NOT NULL,
+    descricao TEXT NOT NULL,
+    FOREIGN KEY (atendimento_id) REFERENCES Atendimento(id_atendimento)
+);
+
+
+select * from Atendimento
+
